@@ -1,0 +1,86 @@
+<!-- templates/home.html -->
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+{% if user.is_authenticated %}
+  Hi {{ user.username }}! I just wanted to write something in here to see if it works
+  <p><a href="{% url 'logout' %}">Log Out</a></p>
+{% else %}
+  <p>You are not logged in</p>
+  <a href="{% url 'login' %}">Log In</a> |
+  <a href="{% url 'signup' %}">Sign Up</a>
+{% endif %}
+
+<body>
+    <div class="flight_search" id='app'>
+        <h1>Look up flights</h1>
+        <label for="dep_airport">Departure Airport?</label>
+            <input type="text" id="dep_airport" v-model="departureAirportCode">
+        <label for="arr_airport">Arrival airport?</label>
+            <input type = "text" id="arr_airport" v-model="arrivalAirportCode">
+        <h2>enter date:</h2>
+        <input type="text" id="month" v-model="month" placeholder="01"><input type="text" id="day" v-model="day" placeholder="01"><input type="text" id="year" v-model="year" placeholder='2021'>
+        <br><button @click="getFlights">Find Flights</button>
+
+    </div>
+  
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/vue"></script>
+<script>
+    let app = new Vue({
+        el: '#app',
+        delimiters: ['[[', ']]'],
+        data: {
+            departureAirportCode: '',
+            arrivalAirportCode:'',
+            scheduledFlights:{},
+            year:'',
+            month:'',
+            day:'',
+           
+            csrf_token: "",
+            },
+        methods: {
+            getFlights: function(){
+                        
+                       axios({
+                        url: http:'//aviation-edge.com/v2/public/timetable?',
+        
+                        method: "get",
+        
+                        headers:{
+                                 
+                        //   "Authorization": `Token token="a51b4c035f2554ba87f3e30c52f9105e"`
+                        },
+                        params: {
+                                 key:'03dff0-0eaa8d',
+                                 appKey:'199b458d7a0a576ec2ea3257ca83e2c8',
+                                 departureAirportCode:`${this.departureAirportCode}`,
+                                 arrivalAirportCode:`${this.arrivalAirportCode}`,
+                                 year:`${this.year}`,
+                                 month:`${this.month}`,
+                                 day:`${this.day}`,
+                                filter: this.searchTerm,
+                                type: this.searchby,
+                                page:this.pages
+        
+                        }
+                  }).then(response =>{
+                      this.scheduledFlights = response.data.scheduledFlights
+                      console.log(response)
+                      console.log(this.scheduledFlights)
+                      }).catch(error => console.log(error))
+                },
+               
+        // created(){ 
+        //     this.pageLoadquotes()
+        // }
+
+        }
+    });
+</script>
+{% endblock %}
