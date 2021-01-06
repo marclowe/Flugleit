@@ -21,9 +21,14 @@
             <input type="text" id="dep_airport" v-model="departureAirportCode">
         <label for="arr_airport">Arrival airport?</label>
             <input type = "text" id="arr_airport" v-model="arrivalAirportCode">
-        <h2>enter date:</h2>
-        <input type="text" id="month" v-model="month" placeholder="01"><input type="text" id="day" v-model="day" placeholder="01"><input type="text" id="year" v-model="year" placeholder='2021'>
-        <br><button @click="getFlights">Find Flights</button>
+        <label for="start">Start date:</label>
+
+        <label for="datetime-local">Departure date and time? </label>
+
+        <input type="datetime-local" id="dep_time" v-model="datetime"
+         name="flight_time" value="2021-06-12T00:00"
+         min="2021-01-01T00:00" max="2035-06-14T23:59">
+         <br><button @click="getFlights">Find Flights</button>
 
     </div>
   
@@ -38,17 +43,14 @@
             departureAirportCode: '',
             arrivalAirportCode:'',
             scheduledFlights:{},
-            year:'',
-            month:'',
-            day:'',
-           
+            datetime:'',
             csrf_token: "",
             },
         methods: {
             getFlights: function(){
                         
                        axios({
-                        url: http:'//aviation-edge.com/v2/public/timetable?',
+                        url:'http://aviation-edge.com/v2/public/timetable?',
         
                         method: "get",
         
@@ -57,22 +59,21 @@
                         //   "Authorization": `Token token="a51b4c035f2554ba87f3e30c52f9105e"`
                         },
                         params: {
-                                 key:'03dff0-0eaa8d',
-                                 appKey:'199b458d7a0a576ec2ea3257ca83e2c8',
-                                 departureAirportCode:`${this.departureAirportCode}`,
-                                 arrivalAirportCode:`${this.arrivalAirportCode}`,
-                                 year:`${this.year}`,
-                                 month:`${this.month}`,
-                                 day:`${this.day}`,
-                                filter: this.searchTerm,
-                                type: this.searchby,
-                                page:this.pages
-        
-                        }
+                                key:'03dff0-0eaa8d',
+                                // iataCode: `${this.departureAirportCode}`,
+                                type:'arrival',
+                                // status: 'scheduled',
+                                // dep_iataCode:`${this.departureAirportCode}`,
+                                iataCode:`${this.arrivalAirportCode}`,
+                                // dep_schTime:`${this.datetime}:00.000`,
+                                // dep_schTime:'2021-01-05T08:15:00.000',
+                                // dep_schTime:'2021-01-05',
+                        },
+                            
                   }).then(response =>{
                       this.scheduledFlights = response.data.scheduledFlights
                       console.log(response)
-                      console.log(this.scheduledFlights)
+                      console.log(dep_schTime)
                       }).catch(error => console.log(error))
                 },
                
