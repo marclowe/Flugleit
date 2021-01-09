@@ -21,36 +21,67 @@
             <input type="text" id="dep_airport" v-model="departureAirportCode">
         <label for="arr_airport">Arrival airport?</label>
             <input type = "text" id="arr_airport" v-model="arrivalAirportCode">
-        <label for="start">Start date:</label>
+        <h3>Departure Date:</h3>
+          <label for="dep_year">Four Digit Year</label>
+          <input type="number" id="dep_year" v-model="year" min="2021" max="2030" placeholder=""><br>
+          <label for="dep_month">Two Digit Month</label>
+          <input type="number" id="dep_month" v-model="month" min="1" max="12" placeholder=""><br>
+          <label for="dep_day">Two Digit Day</label>
+          <input type="number" id="dep_day" v-model="day" min="1" max="31" placeholder="">
+          <br><button @click="getFlights">Display Flights</button>
+       
 
-        <label for="datetime-local">Departure date and time? </label>
-
-        <input type="datetime-local" id="dep_time" v-model="datetime"
-         name="flight_time" value="2021-06-12T00:00"
-         min="2021-01-01T00:00" max="2035-06-14T23:59">
-         <br><button @click="getFlights">Find Flights</button>
+        <!-- type="date" id="dep_time" v-model="datetime"
+        name="flight_time" value="2021-06-12"
+        min="2021-01-01" max="2035-06-14">  -->
+        <div v-if="scheduledFlights" id="display_flights">
+          <h3  id="date">Date: [[month]]/[[day]]/[[year]]</h3>
+          <ul v-for="flight in scheduledFlights" id="flightlist" :key="flight.id">
+              <li> Dep: [[flight.departureAirportFsCode]] [[flight.formattedDeparture]] arr: [[flight.arrivalAirportFsCode]] [[flight.formattedArrival]] [[flight.carrierFsCode]] [[flight.flightNumber]] </li>
+          </ul>
+        </div>
+        
 
     </div>
   
 
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="https://unpkg.com/vue"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://unpkg.com/vue-select@latest"></script>
+<link rel="stylesheet" href="https://unpkg.com/vue-select@latest/dist/vue-select.css">
+
+
+
+
 <script>
+    
     let app = new Vue({
         el: '#app',
         delimiters: ['[[', ']]'],
         data: {
             departureAirportCode: '',
             arrivalAirportCode:'',
-            scheduledFlights:{},
+            scheduledFlights:'',
             datetime:'',
+            year:'',
+            month:'',
+            day:'',
             csrf_token: "",
             },
+        filters: {
+              moment
+        },
         methods: {
+            sortFlights: function(){
+
+            },
             getFlights: function(){
                         
                        axios({
-                        url:'http://aviation-edge.com/v2/public/timetable?',
+                        // url:'http://aviation-edge.com/v2/public/timetable?',
+                        // url:'http://api.aviationstack.com/v1/flights',
+                        url:`https://flightstats-api.herokuapp.com/flex/schedules/rest/v1/json/from/${this.departureAirportCode}/to/${this.arrivalAirportCode}/departing/${this.year}/${this.month}/${this.day}?appId=3c14b40b&appKey=199b458d7a0a576ec2ea3257ca83e2c8`,
         
                         method: "get",
         
@@ -59,21 +90,39 @@
                         //   "Authorization": `Token token="a51b4c035f2554ba87f3e30c52f9105e"`
                         },
                         params: {
-                                key:'03dff0-0eaa8d',
+                                // access_key:'de18b5c4dfc8278bad1da714f59259c6',
+                                // dep_iata: `${this.departureAirportCode}`,
+                                // arr_iata:`${this.arrivalAirportCode}`,
+                                // flight_status: 'scheduled',
+                                // // flight_date: `${this.datetime}`,
+
+                                // key:'03dff0-0eaa8d',
                                 // iataCode: `${this.departureAirportCode}`,
-                                type:'arrival',
+                                // type:'arrival',
                                 // status: 'scheduled',
                                 // dep_iataCode:`${this.departureAirportCode}`,
-                                iataCode:`${this.arrivalAirportCode}`,
+                                // iataCode:`${this.arrivalAirportCode}`,
                                 // dep_schTime:`${this.datetime}:00.000`,
                                 // dep_schTime:'2021-01-05T08:15:00.000',
                                 // dep_schTime:'2021-01-05',
                         },
                             
                   }).then(response =>{
-                      this.scheduledFlights = response.data.scheduledFlights
+                      this.scheduledFlights = response.data
                       console.log(response)
-                      console.log(dep_schTime)
+                      // console.log(dep_schTime)
+                      this.scheduledFlights = response.data.scheduledFlights.filter(flight => flight.isCodeshare === false)
+                      .map(flight=>{
+                        flight.formattedDeparture = moment(flight.departureTime).format("h:mm a")
+                        flight.formattedArrival = moment(flight.arrivalTime).format(" h:mm a")
+                        return flight
+                      })
+                      console.log('it worked', this.scheduledFlights)
+                      this.scheduledFlights.sort(function (x, y) {
+                                                        let a = new Date(x.departureTime),
+                                                            b = new Date(y.departureTime);
+                                                        return a - b;
+                                                    });                    
                       }).catch(error => console.log(error))
                 },
                
