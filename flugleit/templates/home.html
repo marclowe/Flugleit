@@ -6,7 +6,7 @@
 {% block content %}
 {% csrf_token %}
 {% if user.is_authenticated %}
-  Hi {{ user.username }}! I just wanted to write something in here to see if it works
+  Hi {{ user.username }}!
   <p><a href="{% url 'logout' %}">Log Out</a></p>
 {% else %}
   <p>You are not logged in</p>
@@ -18,17 +18,77 @@
     <div class="flight_search" id='app'>
         <h1>Look up flights</h1>
         <label for="dep_airport">Departure Airport?</label>
-            <input type="text" id="dep_airport" v-model="departureAirportCode">
+            <input type="text" id="dep_airport" v-model="departureAirportCode"><br>
         <label for="arr_airport">Arrival airport?</label>
-            <input type = "text" id="arr_airport" v-model="arrivalAirportCode">
+            <input type = "text" id="arr_airport" v-model="arrivalAirportCode"><br>
         <h3>Departure Date:</h3>
-          <label for="dep_year">Four Digit Year</label>
-          <input type="number" id="dep_year" v-model="year" min="2021" max="2030" placeholder=""><br>
-          <label for="dep_month">Two Digit Month</label>
-          <input type="number" id="dep_month" v-model="month" min="1" max="12" placeholder=""><br>
+          <label for="dep_year">Year</label>
+          <select type="number" id="dep_year" v-model="year" min="2021" max="2030" placeholder="yr"><br>
+            <option>- Year -</option>
+            <option value="2021">2021</option>
+            <option value="2022">2022</option>
+            <option value="2023">2023</option>
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+            <option value="2028">2028</option>
+            <option value="2029">2029</option>
+            <option value="2030">2030</option>
+          </select><br>
+          <label for="dep_month">Month</label>
+          <select id="dep_month" v-model="month" placeholder="mo">
+            <option>- Month -</option>
+            <option value="1">January</option>
+            <option value="2">Febuary</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select><br>
+          <!-- <v-select label="label" :options="month"></v-select> -->
           <label for="dep_day">Two Digit Day</label>
-          <input type="number" id="dep_day" v-model="day" min="1" max="31" placeholder="">
-          <br><button @click="getFlights">Display Flights</button>
+          <select type="number" id="dep_day" v-model="day" placeholder="day">
+            <option>- Day -</option>
+            <option value="01">1</option>
+            <option value="02">2</option>
+            <option value="03">3</option>
+            <option value="04">4</option>
+            <option value="05">5</option>
+            <option value="06">6</option>
+            <option value="07">7</option>
+            <option value="08">8</option>
+            <option value="09">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+            <option value="13">13</option>
+            <option value="14">14</option>
+            <option value="15">15</option>
+            <option value="16">16</option>
+            <option value="17">17</option>
+            <option value="18">18</option>
+            <option value="19">19</option>
+            <option value="20">20</option>
+            <option value="21">21</option>
+            <option value="22">22</option>
+            <option value="23">23</option>
+            <option value="24">24</option>
+            <option value="25">25</option>
+            <option value="26">26</option>
+            <option value="27">27</option>
+            <option value="28">28</option>
+            <option value="29">29</option>
+            <option value="30">30</option>
+            <option value="31">31</option>
+          </select><br>
+          <br><button @click="getFlights">Display Flights</button>  <button @click="clearForm">clear</button>
        
 
         <!-- type="date" id="dep_time" v-model="datetime"
@@ -36,8 +96,17 @@
         min="2021-01-01" max="2035-06-14">  -->
         <div v-if="scheduledFlights" id="display_flights">
           <h3  id="date">Date: [[month]]/[[day]]/[[year]]</h3>
-          <ul v-for="flight in scheduledFlights" id="flightlist" :key="flight.id">
-              <li> Dep: [[flight.departureAirportFsCode]] [[flight.formattedDeparture]] arr: [[flight.arrivalAirportFsCode]] [[flight.formattedArrival]] [[flight.carrierFsCode]] [[flight.flightNumber]] </li>
+          <ul v-for="flight in scheduledFlights" id="flightlist" :key="flight.flightNumber">
+              <li> Dep: [[flight.departureAirportFsCode]] [[flight.formattedDeparture]] Arr: [[flight.arrivalAirportFsCode]] [[flight.formattedArrival]] [[flight.carrierFsCode]] [[flight.flightNumber]] <button v-if ="flight.displayInfo === true"  @click="collapseFlight">collapse</button> 
+                  <button v-if ="flight.displayInfo === false" @click="getFlightStatus(flight)">Check Flight Status</button>
+                  <div class= "flight_info" v-if ="flight.displayInfo"> 
+                    <div class= "flight_info" id="Departure_Gate">Departure Gate: [[flightStatus[0].airportResources.departureGate]]</div>
+                    <div class= "flight_info" id="Arrival_Gate">Arrival Gate: [[flightStatus[0].airportResources.arrivalGate]]</div>
+                    <div class= "flight_info" id="Baggage_Claim">Baggage Claim: [[flightStatus[0].airportResources.baggage]]</div>
+                    <div class= "flight_info" id="delays">scheduled dep: [[flightStatus[0].formatScheduledDeparture]] estimated dep:[[flightStatus[0].formatEstimatedDeparture]]</div>
+                    <div class= "flight_info" id="delays">scheduled arr: [[flightStatus[0].formatScheduledArrival]] estimated arr:[[flightStatus[0].formatEstimatedArrival]]</div>
+                  </div>
+              </li>
           </ul>
         </div>
         
@@ -48,21 +117,19 @@
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="https://unpkg.com/vue"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-<script src="https://unpkg.com/vue-select@latest"></script>
-<link rel="stylesheet" href="https://unpkg.com/vue-select@latest/dist/vue-select.css">
-
-
-
 
 <script>
     
     let app = new Vue({
         el: '#app',
+        
         delimiters: ['[[', ']]'],
         data: {
+            
             departureAirportCode: '',
             arrivalAirportCode:'',
             scheduledFlights:'',
+            flightStatus:[{}],
             datetime:'',
             year:'',
             month:'',
@@ -73,15 +140,27 @@
               moment
         },
         methods: {
-            sortFlights: function(){
-
+            collapseFlight: function(){
+              for (i = 0, len = this.scheduledFlights.length, text = ""; i < len; i++) {
+                            this.scheduledFlights[i].displayInfo = false;
+                      }
+            },
+            clearForm: function(){
+                  this.departureAirportCode = '',
+                  this.arrivalAirportCode = '',
+                  this.scheduledFlights ='',
+                  this.flightStatus =[{}],
+                  this.datetime ='',
+                  this.year = '',
+                  this.month ='',
+                  this.day =''
             },
             getFlights: function(){
                         
                        axios({
                         // url:'http://aviation-edge.com/v2/public/timetable?',
                         // url:'http://api.aviationstack.com/v1/flights',
-                        url:`https://flightstats-api.herokuapp.com/flex/schedules/rest/v1/json/from/${this.departureAirportCode}/to/${this.arrivalAirportCode}/departing/${this.year}/${this.month}/${this.day}?appId=3c14b40b&appKey=199b458d7a0a576ec2ea3257ca83e2c8`,
+                        url:`https://flightstats-api.herokuapp.com/flex/schedules/rest/v1/json/from/${this.departureAirportCode}/to/${this.arrivalAirportCode}/departing/${this.year}/${this.month}/${this.day}?appId=3c14b40b&appKey=1f6e49c1000c59e4ecd064b9c377fc64`,
         
                         method: "get",
         
@@ -108,16 +187,14 @@
                         },
                             
                   }).then(response =>{
-                      this.scheduledFlights = response.data
-                      console.log(response)
-                      // console.log(dep_schTime)
-                      this.scheduledFlights = response.data.scheduledFlights.filter(flight => flight.isCodeshare === false)
+                       this.scheduledFlights = response.data.scheduledFlights.filter(flight => flight.isCodeshare === false)
                       .map(flight=>{
                         flight.formattedDeparture = moment(flight.departureTime).format("h:mm a")
                         flight.formattedArrival = moment(flight.arrivalTime).format(" h:mm a")
+                        flight.displayInfo = false
                         return flight
                       })
-                      console.log('it worked', this.scheduledFlights)
+                      // console.log('it worked', this.scheduledFlights)
                       this.scheduledFlights.sort(function (x, y) {
                                                         let a = new Date(x.departureTime),
                                                             b = new Date(y.departureTime);
@@ -125,12 +202,46 @@
                                                     });                    
                       }).catch(error => console.log(error))
                 },
-               
-        // created(){ 
-        //     this.pageLoadquotes()
-        // }
+                getFlightStatus: function(flight){
+                        
+                        axios({
+                         // url:'http://aviation-edge.com/v2/public/timetable?',
+                         // url:'http://api.aviationstack.com/v1/flights',
+                         url:`https://flightstats-api.herokuapp.com/flex/flightstatus/rest/v2/json/flight/status/${flight.carrierFsCode}/${flight.flightNumber}/dep/${this.year}/${this.month}/${this.day}?appId=3c14b40b&appKey=1f6e49c1000c59e4ecd064b9c377fc64&utc=false`,
+                        //  url:`https://flightstats-api.herokuapp.com/flex/flightstatus/rest/v1/json/flight/status/UA/419/dep/${this.year}/${this.month}/${this.day}?appId=3c14b40b&appKey=199b458d7a0a576ec2ea3257ca83e2c8&utc=false`,
 
-        }
+                         method: "get",
+         
+                         headers:{
+                                  
+                         //   "Authorization": `Token token="a51b4c035f2554ba87f3e30c52f9105e"`
+                         },
+                         params: {
+                                 
+                         },
+                             
+                   }).then(response =>{
+                       console.log(response.data)
+                       this.flightStatus = response.data.flightStatuses
+                       .map(flight=>{
+                        flight.formatScheduledDeparture = moment(flight.operationalTimes.publishedDeparture.dateLocal).format("h:mm a")
+                        flight.formatEstimatedDeparture = moment(flight.operationalTimes.estimatedGateDeparture.dateLocal).format(" h:mm a")
+                        flight.formatScheduledArrival = moment(flight.operationalTimes.scheduledGateArrival.dateLocal).format("h:mm a")
+                        flight.formatEstimatedArrival = moment(flight.operationalTimes.estimatedGateArrival.dateLocal).format(" h:mm a")
+                        flight.formatActualDeparture = moment(flight.operationalTimes.actualGateDeparture.dateLocal).format(" h:mm a")
+                        return flight
+                      })
+                       for (i = 0, len = this.scheduledFlights.length, text = ""; i < len; i++) {
+                            this.scheduledFlights[i].displayInfo = false;
+                      }
+                      flight.displayInfo = true
+                      console.log(response)
+                      })
+                      
+                 },
+
+         }    
+         
     });
 </script>
 {% endblock %}
