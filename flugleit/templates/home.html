@@ -18,7 +18,10 @@
     <div class="flight_search" id='app'>
         <h1>Look up flights</h1>
         <label for="dep_airport">Departure Airport?</label>
-            <input type="text" id="dep_airport" v-model="departureAirportCode"><br>
+            <input @input="getDepAirport" type="text" id="dep_airport" v-model="departureEntry"><br>
+            <select id = "departure display" v-if = "departureAirport" v-model="departureAirportCode" >
+              <option v-for="item in departureAirport.airportsByCities.slice(0, 10)" :key="item.id" id="dep_airport_entry" :value = "item.codeIataAirport">[[item.nameAirport]] [[item.codeIataAirport]]</option>
+              </select>
         <label for="arr_airport">Arrival airport?</label>
             <input type = "text" id="arr_airport" v-model="arrivalAirportCode"><br>
         <h3>Departure Date:</h3>
@@ -100,11 +103,12 @@
               <li> Dep: [[flight.departureAirportFsCode]] [[flight.formattedDeparture]] Arr: [[flight.arrivalAirportFsCode]] [[flight.formattedArrival]] [[flight.carrierFsCode]] [[flight.flightNumber]] <button v-if ="flight.displayInfo === true"  @click="collapseFlight">collapse</button> 
                   <button v-if ="flight.displayInfo === false" @click="getFlightStatus(flight)">Check Flight Status</button>
                   <div class= "flight_info" v-if ="flight.displayInfo"> 
-                    <div class= "flight_info" id="Departure_Gate">Departure Gate: [[flightStatus[0].airportResources.departureGate]]</div>
-                    <div class= "flight_info" id="Arrival_Gate">Arrival Gate: [[flightStatus[0].airportResources.arrivalGate]]</div>
-                    <div class= "flight_info" id="Baggage_Claim">Baggage Claim: [[flightStatus[0].airportResources.baggage]]</div>
-                    <div class= "flight_info" id="delays">scheduled dep: [[flightStatus[0].formatScheduledDeparture]] estimated dep:[[flightStatus[0].formatEstimatedDeparture]]</div>
-                    <div class= "flight_info" id="delays">scheduled arr: [[flightStatus[0].formatScheduledArrival]] estimated arr:[[flightStatus[0].formatEstimatedArrival]]</div>
+                    <!-- <div>[[today]]</div> -->
+                    <div class= "flight_info" v-if = "flightStatus[0].airportResources.departureGate" id="Departure_Gate">Departure Gate: [[flightStatus[0].airportResources.departureGate]]</div>
+                    <div class= "flight_info" v-if = "flightStatus[0].airportResources.arrivalGate" id="Arrival_Gate">Arrival Gate: [[flightStatus[0].airportResources.arrivalGate]]</div>
+                    <div class= "flight_info" v-if = "flightStatus[0].airportResources.baggage" id="Baggage_Claim">Baggage Claim: [[flightStatus[0].airportResources.baggage]]</div>
+                    <div class= "flight_info" v-if="flightStatus[0].formatEstimatedDeparture"id="delays">Scheduled Dep: [[flightStatus[0].formatScheduledDeparture]] Estimated Dep:[[flightStatus[0].formatEstimatedDeparture]]</div>
+                    <div class= "flight_info" v-if="flightStatus[0].formatEstimatedArrival" id="delays">Scheduled Arr: [[flightStatus[0].formatScheduledArrival]] Estimated Arr:[[flightStatus[0].formatEstimatedArrival]]</div>
                   </div>
               </li>
           </ul>
@@ -128,6 +132,11 @@
             
             departureAirportCode: '',
             arrivalAirportCode:'',
+            departureAirport:'',
+            arrAiport:'',
+            departureEntry:'',
+            arrEntry:'',
+            // today: moment(Date),
             scheduledFlights:'',
             flightStatus:[{}],
             datetime:'',
@@ -140,6 +149,10 @@
               moment
         },
         methods: {
+            setDep: function(iataCode){
+                  console.log(iataCode)
+                  this.departureAirportCode = iataCode
+            },
             collapseFlight: function(){
               for (i = 0, len = this.scheduledFlights.length, text = ""; i < len; i++) {
                             this.scheduledFlights[i].displayInfo = false;
@@ -155,6 +168,45 @@
                   this.month ='',
                   this.day =''
             },
+            getDepAirport: function(){
+                        
+                        axios({
+                         // url:'http://aviation-edge.com/v2/public/timetable?',
+                         // url:'http://api.aviationstack.com/v1/flights',
+                         url:`http://aviation-edge.com/v2/public/autocomplete?`,
+         
+                         method: "get",
+         
+                         headers:{
+                                  
+                         //   "Authorization": `Token token="a51b4c035f2554ba87f3e30c52f9105e"`
+                         },
+                         params: {
+                              key:'03dff0-0eaa8d',
+                              city:this.departureEntry,
+                         },
+            getArrAirport: function(){
+                        
+                        axios({
+                         // url:'http://aviation-edge.com/v2/public/timetable?',
+                         // url:'http://api.aviationstack.com/v1/flights',
+                         url:`http://aviation-edge.com/v2/public/autocomplete?`,
+         
+                         method: "get",
+         
+                         headers:{
+                                  
+                         //   "Authorization": `Token token="a51b4c035f2554ba87f3e30c52f9105e"`
+                         },
+                         params: {
+                              key:'03dff0-0eaa8d',
+                              city:this.arrEntry,
+                         },
+                             
+                   }).then(response =>{this.departureAirport=response.data
+                    console.log(response.data)
+                       }).catch(error => console.log(error))
+                 },
             getFlights: function(){
                         
                        axios({
@@ -169,21 +221,7 @@
                         //   "Authorization": `Token token="a51b4c035f2554ba87f3e30c52f9105e"`
                         },
                         params: {
-                                // access_key:'de18b5c4dfc8278bad1da714f59259c6',
-                                // dep_iata: `${this.departureAirportCode}`,
-                                // arr_iata:`${this.arrivalAirportCode}`,
-                                // flight_status: 'scheduled',
-                                // // flight_date: `${this.datetime}`,
-
-                                // key:'03dff0-0eaa8d',
-                                // iataCode: `${this.departureAirportCode}`,
-                                // type:'arrival',
-                                // status: 'scheduled',
-                                // dep_iataCode:`${this.departureAirportCode}`,
-                                // iataCode:`${this.arrivalAirportCode}`,
-                                // dep_schTime:`${this.datetime}:00.000`,
-                                // dep_schTime:'2021-01-05T08:15:00.000',
-                                // dep_schTime:'2021-01-05',
+                        
                         },
                             
                   }).then(response =>{
@@ -223,12 +261,13 @@
                    }).then(response =>{
                        console.log(response.data)
                        this.flightStatus = response.data.flightStatuses
+                       .filter(flight =>(flight.departureAirportFsCode === this.departureAirportCode && flight.arrivalAirportFsCode === this.arrivalAirportCode))
                        .map(flight=>{
-                        flight.formatScheduledDeparture = moment(flight.operationalTimes.publishedDeparture.dateLocal).format("h:mm a")
-                        flight.formatEstimatedDeparture = moment(flight.operationalTimes.estimatedGateDeparture.dateLocal).format(" h:mm a")
-                        flight.formatScheduledArrival = moment(flight.operationalTimes.scheduledGateArrival.dateLocal).format("h:mm a")
-                        flight.formatEstimatedArrival = moment(flight.operationalTimes.estimatedGateArrival.dateLocal).format(" h:mm a")
-                        flight.formatActualDeparture = moment(flight.operationalTimes.actualGateDeparture.dateLocal).format(" h:mm a")
+                        if (flight.operationalTimes.scheduledGateDeparture){flight.formatScheduledDeparture = moment(flight.operationalTimes.scheduledGateDeparture.dateLocal).format("h:mm a")};
+                        if(flight.operationalTimes.estimatedGateDeparture){flight.formatEstimatedDeparture = moment(flight.operationalTimes.estimatedGateDeparture.dateLocal).format(" h:mm a")};
+                        if(flight.operationalTimes.scheduledGateArrival){flight.formatScheduledArrival = moment(flight.operationalTimes.scheduledGateArrival.dateLocal).format("h:mm a")};
+                        if(flight.operationalTimes.estimatedGateArrival){flight.formatEstimatedArrival = moment(flight.operationalTimes.estimatedGateArrival.dateLocal).format(" h:mm a")};
+                        if(flight.operationalTimes.actualGateDeparture){flight.formatActualDeparture = moment(flight.operationalTimes.actualGateDeparture.dateLocal).format(" h:mm a")}
                         return flight
                       })
                        for (i = 0, len = this.scheduledFlights.length, text = ""; i < len; i++) {
