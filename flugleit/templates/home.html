@@ -17,13 +17,28 @@
 <body>
     <div class="flight_search" id='app'>
         <h1>Look up flights</h1>
+        <div id="dep_lookup">
         <label for="dep_airport">Departure Airport?</label>
-            <input @input="getDepAirport" type="text" id="dep_airport" v-model="departureEntry"><br>
-            <select id = "departure display" v-if = "departureAirport" v-model="departureAirportCode" >
+            <input @input="getDepAirport" type="text" id="dep_airport" v-model="departureEntry" placeholder="enter city or airport code">
+            <!-- <select id = "departure display" v-if = "departureAirport" v-model="departureAirportCode" >
               <option v-for="item in departureAirport.airportsByCities.slice(0, 10)" :key="item.id" id="dep_airport_entry" :value = "item.codeIataAirport">[[item.nameAirport]] [[item.codeIataAirport]]</option>
-              </select>
-        <label for="arr_airport">Arrival airport?</label>
-            <input type = "text" id="arr_airport" v-model="arrivalAirportCode"><br>
+              </select> -->
+              <div v-if="departureAirport">
+              <div v-for="item in departureAirport.airportsByCities.slice(0, 10)" :key="item.id" id="dep_airport_entry":value = "item.codeIataAirport">[[item.nameAirport]] [[item.codeIataAirport]] <button @click="setDep(item.codeIataAirport, item.nameAirport)"> ✔</button></div>
+              </div>
+        </div>
+        <div id="dep_lookup">
+          <label for="dep_airport">Arrival Airport?</label>
+              <input @input="getArrAirport" type="text" id="arr_airport" v-model="arrEntry" placeholder="enter city or airport code">
+              <!-- <select id = "departure display" v-if = "departureAirport" v-model="departureAirportCode" >
+                <option v-for="item in departureAirport.airportsByCities.slice(0, 10)" :key="item.id" id="dep_airport_entry" :value = "item.codeIataAirport">[[item.nameAirport]] [[item.codeIataAirport]]</option>
+                </select> -->
+                <div v-if="arrAiport">
+                <div v-for="item in arrAiport.airportsByCities.slice(0, 10)" :key="item.id" id="arr_airport_entry":value = "item.codeIataAirport">[[item.nameAirport]] [[item.codeIataAirport]] <button @click="setArr(item.codeIataAirport, item.nameAirport)"> ✔</button></div>
+                </div>
+        </div>
+        <!-- <label for="arr_airport">Arrival airport?</label>
+            <input type = "text" id="arr_airport" v-model="arrivalAirportCode"><br> -->
         <h3>Departure Date:</h3>
           <label for="dep_year">Year</label>
           <select type="number" id="dep_year" v-model="year" min="2021" max="2030" placeholder="yr"><br>
@@ -98,17 +113,22 @@
         name="flight_time" value="2021-06-12"
         min="2021-01-01" max="2035-06-14">  -->
         <div v-if="scheduledFlights" id="display_flights">
-          <h3  id="date">Date: [[month]]/[[day]]/[[year]]</h3>
+          <h3  id="date">Date: [[month]]/[[day]]/[[year]] Current [[departureAirportCode]] local time:[[depAirportInfo.formattedAirportLocal]]</h3>
           <ul v-for="flight in scheduledFlights" id="flightlist" :key="flight.flightNumber">
-              <li> Dep: [[flight.departureAirportFsCode]] [[flight.formattedDeparture]] Arr: [[flight.arrivalAirportFsCode]] [[flight.formattedArrival]] [[flight.carrierFsCode]] [[flight.flightNumber]] <button v-if ="flight.displayInfo === true"  @click="collapseFlight">collapse</button> 
+              <li> Dep: [[flight.departureAirportFsCode]] [[flight.formattedDeparture]] Arr: [[flight.arrivalAirportFsCode]] [[flight.formattedArrival]] [[flight.carrierFsCode]] [[flight.flightNumber]] Aircraft Type: [[flight.flightEquipmentIataCode]] <button v-if ="flight.displayInfo === true"  @click="collapseFlight">collapse</button> 
                   <button v-if ="flight.displayInfo === false" @click="getFlightStatus(flight)">Check Flight Status</button>
                   <div class= "flight_info" v-if ="flight.displayInfo"> 
                     <!-- <div>[[today]]</div> -->
                     <div class= "flight_info" v-if = "flightStatus[0].airportResources.departureGate" id="Departure_Gate">Departure Gate: [[flightStatus[0].airportResources.departureGate]]</div>
+                      <div class = "flight_info_none" v-else>No Departure Gate Information</div>
                     <div class= "flight_info" v-if = "flightStatus[0].airportResources.arrivalGate" id="Arrival_Gate">Arrival Gate: [[flightStatus[0].airportResources.arrivalGate]]</div>
+                      <div class = "flight_info_none" v-else>No Arrival Gate Information</div>
                     <div class= "flight_info" v-if = "flightStatus[0].airportResources.baggage" id="Baggage_Claim">Baggage Claim: [[flightStatus[0].airportResources.baggage]]</div>
+                      <div class = "flight_info_none" v-else>No Baggage Information</div>
                     <div class= "flight_info" v-if="flightStatus[0].formatEstimatedDeparture"id="delays">Scheduled Dep: [[flightStatus[0].formatScheduledDeparture]] Estimated Dep:[[flightStatus[0].formatEstimatedDeparture]]</div>
+                      <div class = "flight_info_none" v-else>No Departure Delay Information</div>
                     <div class= "flight_info" v-if="flightStatus[0].formatEstimatedArrival" id="delays">Scheduled Arr: [[flightStatus[0].formatScheduledArrival]] Estimated Arr:[[flightStatus[0].formatEstimatedArrival]]</div>
+                      <div class = "flight_info_none" v-else>No Arrival Delay Information</div>
                   </div>
               </li>
           </ul>
@@ -136,6 +156,7 @@
             arrAiport:'',
             departureEntry:'',
             arrEntry:'',
+            depAirportInfo:'',
             // today: moment(Date),
             scheduledFlights:'',
             flightStatus:[{}],
@@ -149,10 +170,19 @@
               moment
         },
         methods: {
-            setDep: function(iataCode){
+            setDep: function(iataCode,nameAirport){
                   console.log(iataCode)
                   this.departureAirportCode = iataCode
+                  this.departureEntry = iataCode
+                  this.departureAirport=''
             },
+            setArr: function(iataCode,nameAirport){
+                  console.log(iataCode)
+                  this.arrivalAirportCode = iataCode
+                  this.arrEntry = iataCode
+                  this.arrAiport=''
+            },
+         
             collapseFlight: function(){
               for (i = 0, len = this.scheduledFlights.length, text = ""; i < len; i++) {
                             this.scheduledFlights[i].displayInfo = false;
@@ -166,7 +196,11 @@
                   this.datetime ='',
                   this.year = '',
                   this.month ='',
-                  this.day =''
+                  this.day ='',
+                  this.departureEntry='',
+                  this.departureAirport='',
+                  this.arrEntry=''
+
             },
             getDepAirport: function(){
                         
@@ -185,6 +219,10 @@
                               key:'03dff0-0eaa8d',
                               city:this.departureEntry,
                          },
+                    }).then(response =>{this.departureAirport=response.data
+                           console.log(response.data)
+                           }).catch(error => console.log(error))
+                 },
             getArrAirport: function(){
                         
                         axios({
@@ -203,7 +241,7 @@
                               city:this.arrEntry,
                          },
                              
-                   }).then(response =>{this.departureAirport=response.data
+                   }).then(response =>{this.arrAiport=response.data
                     console.log(response.data)
                        }).catch(error => console.log(error))
                  },
@@ -225,6 +263,7 @@
                         },
                             
                   }).then(response =>{
+                       console.log(response.data)
                        this.scheduledFlights = response.data.scheduledFlights.filter(flight => flight.isCodeshare === false)
                       .map(flight=>{
                         flight.formattedDeparture = moment(flight.departureTime).format("h:mm a")
@@ -237,7 +276,8 @@
                                                         let a = new Date(x.departureTime),
                                                             b = new Date(y.departureTime);
                                                         return a - b;
-                                                    });                    
+                                                    }); 
+                      this.getDepAirportInfo()                   
                       }).catch(error => console.log(error))
                 },
                 getFlightStatus: function(flight){
@@ -278,8 +318,28 @@
                       })
                       
                  },
+                 getDepAirportInfo: function(){
+                        
+                        axios({
+                         url:`https://flightstats-api.herokuapp.com/flex/airports/rest/v1/json/iata/${this.departureAirportCode}?appId=3c14b40b&appKey=1f6e49c1000c59e4ecd064b9c377fc64`,
+         
+                         method: "get",
+         
+                         headers:{
+                        },
+                         params: {
+                         },
+                             
+                   }).then(response =>{
+                        this.depAirportInfo = response.data.airports
+                       .map(flight=>{
+                         flight.formattedAirportLocal = moment(flight.localTime).format("h:mm a")
+                        return flight
+                       })
+                      })
+                  },
 
-         }    
+        }
          
     });
 </script>
