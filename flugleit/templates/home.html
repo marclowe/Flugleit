@@ -6,7 +6,7 @@
 {% block content %}
 {% csrf_token %}
 {% if user.is_authenticated %}
-  Hi {{ user.username }}!
+  <h3 id=>Hi {{ user.username }}!</h3>
   <p><a href="{% url 'logout' %}">Log Out</a></p>
 {% else %}
   <p>You are not logged in</p>
@@ -20,100 +20,27 @@
         <div id="dep_lookup">
         <label for="dep_airport">Departure Airport?</label>
             <input @input="getDepAirport" type="text" id="dep_airport" v-model="departureEntry" placeholder="enter city or airport code">
-            <!-- <select id = "departure display" v-if = "departureAirport" v-model="departureAirportCode" >
-              <option v-for="item in departureAirport.airportsByCities.slice(0, 10)" :key="item.id" id="dep_airport_entry" :value = "item.codeIataAirport">[[item.nameAirport]] [[item.codeIataAirport]]</option>
-              </select> -->
               <div v-if="departureAirport">
-              <div v-for="item in departureAirport.airportsByCities.slice(0, 10)" :key="item.id" id="dep_airport_entry":value = "item.codeIataAirport">[[item.nameAirport]] [[item.codeIataAirport]] <button @click="setDep(item.codeIataAirport, item.nameAirport)"> ✔</button></div>
+              <div v-for="item in departureAirport.slice(0, 10)" :key="item.id" id="dep_airport_entry":value = "item.codeIataAirport">[[item.nameAirport]] [[item.codeIataAirport]] <button @click="setDep(item.codeIataAirport, item.nameAirport)"> ✔</button></div>
               </div>
         </div>
         <div id="dep_lookup">
           <label for="dep_airport">Arrival Airport?</label>
               <input @input="getArrAirport" type="text" id="arr_airport" v-model="arrEntry" placeholder="enter city or airport code">
-              <!-- <select id = "departure display" v-if = "departureAirport" v-model="departureAirportCode" >
-                <option v-for="item in departureAirport.airportsByCities.slice(0, 10)" :key="item.id" id="dep_airport_entry" :value = "item.codeIataAirport">[[item.nameAirport]] [[item.codeIataAirport]]</option>
-                </select> -->
                 <div v-if="arrAiport">
-                <div v-for="item in arrAiport.airportsByCities.slice(0, 10)" :key="item.id" id="arr_airport_entry":value = "item.codeIataAirport">[[item.nameAirport]] [[item.codeIataAirport]] <button @click="setArr(item.codeIataAirport, item.nameAirport)"> ✔</button></div>
+                <div v-for="item in arrAiport.slice(0, 10)" :key="item.id" id="arr_airport_entry":value = "item.codeIataAirport">[[item.nameAirport]] [[item.codeIataAirport]] <button @click="setArr(item.codeIataAirport, item.nameAirport)"> ✔</button></div>
                 </div>
         </div>
-        <!-- <label for="arr_airport">Arrival airport?</label>
-            <input type = "text" id="arr_airport" v-model="arrivalAirportCode"><br> -->
-        <h3>Departure Date:</h3>
-          <label for="dep_year">Year</label>
-          <select type="number" id="dep_year" v-model="year" min="2021" max="2030" placeholder="yr"><br>
-            <option>- Year -</option>
-            <option value="2021">2021</option>
-            <option value="2022">2022</option>
-            <option value="2023">2023</option>
-            <option value="2024">2024</option>
-            <option value="2025">2025</option>
-            <option value="2026">2026</option>
-            <option value="2027">2027</option>
-            <option value="2028">2028</option>
-            <option value="2029">2029</option>
-            <option value="2030">2030</option>
-          </select><br>
-          <label for="dep_month">Month</label>
-          <select id="dep_month" v-model="month" placeholder="mo">
-            <option>- Month -</option>
-            <option value="1">January</option>
-            <option value="2">Febuary</option>
-            <option value="3">March</option>
-            <option value="4">April</option>
-            <option value="5">May</option>
-            <option value="6">June</option>
-            <option value="7">July</option>
-            <option value="8">August</option>
-            <option value="9">September</option>
-            <option value="10">October</option>
-            <option value="11">November</option>
-            <option value="12">December</option>
-          </select><br>
-          <!-- <v-select label="label" :options="month"></v-select> -->
-          <label for="dep_day">Two Digit Day</label>
-          <select type="number" id="dep_day" v-model="day" placeholder="day">
-            <option>- Day -</option>
-            <option value="01">1</option>
-            <option value="02">2</option>
-            <option value="03">3</option>
-            <option value="04">4</option>
-            <option value="05">5</option>
-            <option value="06">6</option>
-            <option value="07">7</option>
-            <option value="08">8</option>
-            <option value="09">9</option>
-            <option value="10">10</option>
-            <option value="11">11</option>
-            <option value="12">12</option>
-            <option value="13">13</option>
-            <option value="14">14</option>
-            <option value="15">15</option>
-            <option value="16">16</option>
-            <option value="17">17</option>
-            <option value="18">18</option>
-            <option value="19">19</option>
-            <option value="20">20</option>
-            <option value="21">21</option>
-            <option value="22">22</option>
-            <option value="23">23</option>
-            <option value="24">24</option>
-            <option value="25">25</option>
-            <option value="26">26</option>
-            <option value="27">27</option>
-            <option value="28">28</option>
-            <option value="29">29</option>
-            <option value="30">30</option>
-            <option value="31">31</option>
-          </select><br>
-          <br><button @click="getFlights">Display Flights</button>  <button @click="clearForm">clear</button>
-       
-
-        <!-- type="date" id="dep_time" v-model="datetime"
-        name="flight_time" value="2021-06-12"
-        min="2021-01-01" max="2035-06-14">  -->
+          <label for="dep_date">Enter Dep Date:</label>
+          <input type="date" id="start" name="dep_date"
+           value="2021-01-01" v-model="datetime"
+           min="2021-01-01" max="2031-12-31">
+          <br><br><button @click="formatDate">Find Flights</button>  <button @click="clearForm">clear</button>
+    
         <div v-if="scheduledFlights" id="display_flights">
-          <h3  id="date">Date: [[month]]/[[day]]/[[year]] Current [[departureAirportCode]] local time:[[depAirportInfo.formattedAirportLocal]]</h3>
+          <h3 v-if="depAirportInfo" id="date">Current Time [[departureAirportCode]]: [[depAirportInfo[0].formattedAirportLocal]]</h3>
+          <h4 id="flight_date"> Flight Date: [[datetime]]</h4>
+          
           <ul v-for="flight in scheduledFlights" id="flightlist" :key="flight.flightNumber">
               <li> Dep: [[flight.departureAirportFsCode]] [[flight.formattedDeparture]] Arr: [[flight.arrivalAirportFsCode]] [[flight.formattedArrival]] [[flight.carrierFsCode]] [[flight.flightNumber]] Aircraft Type: [[flight.flightEquipmentIataCode]] <button v-if ="flight.displayInfo === true"  @click="collapseFlight">collapse</button> 
                   <button v-if ="flight.displayInfo === false" @click="getFlightStatus(flight)">Check Flight Status</button>
@@ -202,6 +129,13 @@
                   this.arrEntry=''
 
             },
+            formatDate: function(){
+                this.year = moment(this.datetime).format("YYYY")
+                this.month = moment(this.datetime).format("MM")
+                this.day = moment(this.datetime).format("DD")
+                console.log(this.year,this.month,this.day)
+                this.getFlights()
+            },
             getDepAirport: function(){
                         
                         axios({
@@ -219,7 +153,14 @@
                               key:'03dff0-0eaa8d',
                               city:this.departureEntry,
                          },
-                    }).then(response =>{this.departureAirport=response.data
+                    }).then(response =>{this.departureAirport = response.data.airportsByCities
+                                      .filter(flight => flight.nameAirport.toLowerCase().includes(this.departureEntry.toLowerCase())
+                                      ||this.departureEntry.toLowerCase().includes(flight.codeIataCity.toLowerCase())
+                                      ||this.departureEntry.toLowerCase() === flight.codeIataAirport.toLowerCase()
+                                      // ||this.departureEntry.toLowerCase() === flight.nameCity.toLowerCase())
+                                      )
+
+                                      
                            console.log(response.data)
                            }).catch(error => console.log(error))
                  },
@@ -241,7 +182,10 @@
                               city:this.arrEntry,
                          },
                              
-                   }).then(response =>{this.arrAiport=response.data
+                   }).then(response =>{this.arrAiport=response.data.airportsByCities
+                    .filter(flight => flight.nameAirport.toLowerCase().includes(this.arrEntry.toLowerCase())
+                    ||this.arrEntry.toLowerCase().includes(flight.codeIataCity.toLowerCase())
+                    ||this.arrEntry.toLowerCase() === flight.codeIataAirport.toLowerCase() )
                     console.log(response.data)
                        }).catch(error => console.log(error))
                  },
@@ -331,11 +275,12 @@
                          },
                              
                    }).then(response =>{
-                        this.depAirportInfo = response.data.airports
+                    this.depAirportInfo = response.data.airports
                        .map(flight=>{
-                         flight.formattedAirportLocal = moment(flight.localTime).format("h:mm a")
+                         flight.formattedAirportLocal = moment(flight.localTime).format("MM/DD/YYYY h:mm a")
                         return flight
                        })
+ 
                       })
                   },
 
