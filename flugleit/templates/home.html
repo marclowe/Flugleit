@@ -5,44 +5,79 @@
 
 {% block content %}
 {% csrf_token %}
-{% if user.is_authenticated %}
-  <h3 id=>Hi {{ user.username }}!</h3>
+<!-- {% if user.is_authenticated %}
+  <h3 id="heyuser">Hi {{ user.username }}!</h3>
   <p><a href="{% url 'logout' %}">Log Out</a></p>
 {% else %}
   <p>You are not logged in</p>
   <a href="{% url 'login' %}">Log In</a> |
   <a href="{% url 'signup' %}">Sign Up</a>
-{% endif %}
+{% endif %} -->
 
 <body>
+   
     <div class="flight_search" id='app'>
-        <h1>Look up flights</h1>
+      <header>
+      {% if user.is_authenticated %}
+      <div id="welcome">
+        <h2 id="welcome_user">Flugleit: The Getchu Home App</h2>
+        <h3 id="heyuser">Hi {{ user.username }}!</h3>
+      <a href="{% url 'logout' %}" id="logout">Log Out</a>
+      </div>
+      </header>
+      <div id="flight_search">
         <div id="dep_lookup">
-        <label for="dep_airport">Departure Airport?</label>
-            <input @input="getDepAirport" type="text" id="dep_airport" v-model="departureEntry" placeholder="enter city or airport code">
+        <h3 id="intro">Find your flight home:</h3>
+        <label for="dep_airport">Departure Airport:</label>
+            <input @input="getDepAirport" type="text" class="search_input" id="dep_airport" v-model="departureEntry" placeholder="enter city or airport code">
               <div v-if="departureAirport">
               <div v-for="item in departureAirport.slice(0, 10)" :key="item.id" id="dep_airport_entry":value = "item.codeIataAirport">[[item.nameAirport]] [[item.codeIataAirport]] <button @click="setDep(item.codeIataAirport, item.nameAirport)"> ✔</button></div>
               </div>
         </div>
-        <div id="dep_lookup">
-          <label for="dep_airport">Arrival Airport?</label>
-              <input @input="getArrAirport" type="text" id="arr_airport" v-model="arrEntry" placeholder="enter city or airport code">
+        <div id="arr_lookup">
+          <label for="arr_airport">Arrival Airport:</label>
+              <input @input="getArrAirport" type="text" class="search_input" id="arr_airport" v-model="arrEntry" placeholder="enter city or airport code">
                 <div v-if="arrAiport">
                 <div v-for="item in arrAiport.slice(0, 10)" :key="item.id" id="arr_airport_entry":value = "item.codeIataAirport">[[item.nameAirport]] [[item.codeIataAirport]] <button @click="setArr(item.codeIataAirport, item.nameAirport)"> ✔</button></div>
                 </div>
         </div>
+        <div id="date_search">
           <label for="dep_date">Enter Dep Date:</label>
-          <input type="date" id="start" name="dep_date"
+          <input type="date" id="start" name="dep_date" class="search_input"
            value="2021-01-01" v-model="datetime"
            min="2021-01-01" max="2031-12-31">
-          <br><br><button @click="formatDate">Find Flights</button>  <button @click="clearForm">clear</button>
-    
-        <div v-if="scheduledFlights" id="display_flights">
+          <div id="buttons"><br><br><button @click="formatDate" class="button">Find Flights</button> <button @click="loadFlights" class="button">My Saved Flights</button> <button @click="clearForm" class="button">clear</button></div>
+        </div>
+        </div>
+          <div v-if ="showSavedFlights" id="display_saved_flights">
+            <ul v-for="flight in scheduledFlights" id="savedflightlist" :key="flight.id">
+              <li>Date: [[flight.flightdate]] Dep: [[flight.departureairportfscode]] [[flight.formatteddeparture]] Arr: [[flight.arrivalairportfscode]] [[flight.formattedarrival]] [[flight.carrierfscode]] [[flight.flightnumber]] Aircraft Type: [[flight.flightequipmentiatacode]]<br><button v-if ="flight.displayInfo === true"  @click="collapseFlight">collapse</button> 
+                <button @click="deleteFlight(flight.id)">delete flight</button>
+                <button v-if ="flight.displayInfo === false" @click="getSavedFlightStatus(flight)">Check Flight Status</button>
+                  <div class= "flight_info" v-if ="flight.displayInfo === true"> 
+                    <!-- <div>[[today]]</div> -->
+                    <div class= "flight_info" v-if = "flightStatus[0].airportResources.departureGate" id="Departure_Gate">Departure Gate: [[flightStatus[0].airportResources.departureGate]]</div>
+                      <div class = "flight_info_none" v-else>No Departure Gate Information</div>
+                    <div class= "flight_info" v-if = "flightStatus[0].airportResources.arrivalGate" id="Arrival_Gate">Arrival Gate: [[flightStatus[0].airportResources.arrivalGate]]</div>
+                      <div class = "flight_info_none" v-else>No Arrival Gate Information</div>
+                    <div class= "flight_info" v-if = "flightStatus[0].airportResources.baggage" id="Baggage_Claim">Baggage Claim: [[flightStatus[0].airportResources.baggage]]</div>
+                      <div class = "flight_info_none" v-else>No Baggage Information</div>
+                    <div class= "flight_info" v-if="flightStatus[0].formatEstimatedDeparture"id="delays">Scheduled Dep: [[flightStatus[0].formatScheduledDeparture]] Estimated Dep:[[flightStatus[0].formatEstimatedDeparture]]</div>
+                      <div class = "flight_info_none" v-else>No Departure Delay Information</div>
+                    <div class= "flight_info" v-if="flightStatus[0].formatEstimatedArrival" id="delays">Scheduled Arr: [[flightStatus[0].formatScheduledArrival]] Estimated Arr:[[flightStatus[0].formatEstimatedArrival]]</div>
+                      <div class = "flight_info_none" v-else>No Arrival Delay Information</div>
+                  </div>
+              </li>
+            </ul>
+            
+          </div>
+            
+          <div v-if="scheduledFlights && showSavedFlights===false" id="display_flights">
           <h3 v-if="depAirportInfo" id="date">Current Time [[departureAirportCode]]: [[depAirportInfo[0].formattedAirportLocal]]</h3>
-          <h4 id="flight_date"> Flight Date: [[datetime]]</h4>
-          
+          <h4 id="flight_date"> Flight Date: [[datetimedisplay]]</h4>
+     
           <ul v-for="flight in scheduledFlights" id="flightlist" :key="flight.flightNumber">
-              <li> Dep: [[flight.departureAirportFsCode]] [[flight.formattedDeparture]] Arr: [[flight.arrivalAirportFsCode]] [[flight.formattedArrival]] [[flight.carrierFsCode]] [[flight.flightNumber]] Aircraft Type: [[flight.flightEquipmentIataCode]] <button v-if ="flight.displayInfo === true"  @click="collapseFlight">collapse</button> 
+              <li> Dep: [[flight.departureAirportFsCode]] [[flight.formattedDeparture]] Arr: [[flight.arrivalAirportFsCode]] [[flight.formattedArrival]] [[flight.carrierFsCode]] [[flight.flightNumber]] Aircraft Type: [[flight.flightEquipmentIataCode]] <button @click = "createFlight(flight)">Save</button><button v-if ="flight.displayInfo === true"  @click="collapseFlight">collapse</button> 
                   <button v-if ="flight.displayInfo === false" @click="getFlightStatus(flight)">Check Flight Status</button>
                   <div class= "flight_info" v-if ="flight.displayInfo"> 
                     <!-- <div>[[today]]</div> -->
@@ -76,7 +111,6 @@
         
         delimiters: ['[[', ']]'],
         data: {
-            
             departureAirportCode: '',
             arrivalAirportCode:'',
             departureAirport:'',
@@ -84,10 +118,13 @@
             departureEntry:'',
             arrEntry:'',
             depAirportInfo:'',
+            myFlights:[],
+            showSavedFlights: false,
             // today: moment(Date),
             scheduledFlights:'',
             flightStatus:[{}],
             datetime:'',
+            datetimedisplay:'',
             year:'',
             month:'',
             day:'',
@@ -115,6 +152,44 @@
                             this.scheduledFlights[i].displayInfo = false;
                       }
             },
+            getSavedFlightStatus: function(flight){
+                      
+                        axios({
+           
+                         url:`https://flightstats-api.herokuapp.com/flex/flightstatus/rest/v2/json/flight/status/${flight.carrierfscode}/${flight.flightnumber}/dep/${flight.year}/${flight.month}/${flight.day}?appId=3c14b40b&appKey=1f6e49c1000c59e4ecd064b9c377fc64&utc=false`,
+            //             //  url:`https://flightstats-api.herokuapp.com/flex/flightstatus/rest/v1/json/flight/status/UA/419/dep/${this.year}/${this.month}/${this.day}?appId=3c14b40b&appKey=199b458d7a0a576ec2ea3257ca83e2c8&utc=false`,
+
+                         method: "get",
+         
+                         headers:{
+                                  
+                  //        //   "Authorization": `Token token="a51b4c035f2554ba87f3e30c52f9105e"`
+                         },
+                         params: {
+                                 
+                         },
+                             
+                   }).then(response =>{
+                       console.log(response.data)
+                       this.flightStatus = response.data.flightStatuses
+                       .filter(flight =>(flight.departureairportfscode === this.departureAirportFsCode && flight.arrivalairportfscode === this.arrivalAirportFsCode))
+                       .map(flight=>{
+                        if (flight.operationalTimes.scheduledGateDeparture){flight.formatScheduledDeparture = moment(flight.operationalTimes.scheduledGateDeparture.dateLocal).format("h:mm a")};
+                        if(flight.operationalTimes.estimatedGateDeparture){flight.formatEstimatedDeparture = moment(flight.operationalTimes.estimatedGateDeparture.dateLocal).format(" h:mm a")};
+                        if(flight.operationalTimes.scheduledGateArrival){flight.formatScheduledArrival = moment(flight.operationalTimes.scheduledGateArrival.dateLocal).format("h:mm a")};
+                        if(flight.operationalTimes.estimatedGateArrival){flight.formatEstimatedArrival = moment(flight.operationalTimes.estimatedGateArrival.dateLocal).format(" h:mm a")};
+                        if(flight.operationalTimes.actualGateDeparture){flight.formatActualDeparture = moment(flight.operationalTimes.actualGateDeparture.dateLocal).format(" h:mm a")}
+                        return flight
+                      })
+                       for (i = 0, len = this.scheduledFlights.length, text = ""; i < len; i++) {
+                            this.scheduledFlights[i].displayInfo = false;
+                      }
+                      flight.displayInfo = true
+                      console.log(response, flight.departureAirportFsCode, this.departureairportfsCode )
+                      })
+                      
+                 },
+            // },
             clearForm: function(){
                   this.departureAirportCode = '',
                   this.arrivalAirportCode = '',
@@ -126,16 +201,19 @@
                   this.day ='',
                   this.departureEntry='',
                   this.departureAirport='',
-                  this.arrEntry=''
+                  this.arrEntry='',
+                  this.myFlights=[],
+                  this.showSavedFlights= false
 
             },
             formatDate: function(){
                 this.year = moment(this.datetime).format("YYYY")
                 this.month = moment(this.datetime).format("MM")
                 this.day = moment(this.datetime).format("DD")
+                this.datetimedisplay = moment(this.datetime).format("MM/DD/YYYY")
                 console.log(this.year,this.month,this.day)
                 this.getFlights()
-            },
+                },
             getDepAirport: function(){
                         
                         axios({
@@ -215,13 +293,17 @@
                         flight.displayInfo = false
                         return flight
                       })
+                      
                       // console.log('it worked', this.scheduledFlights)
                       this.scheduledFlights.sort(function (x, y) {
                                                         let a = new Date(x.departureTime),
                                                             b = new Date(y.departureTime);
                                                         return a - b;
                                                     }); 
-                      this.getDepAirportInfo()                   
+                         this.showSavedFlights = false 
+                         this.getDepAirportInfo()
+                     
+                                     
                       }).catch(error => console.log(error))
                 },
                 getFlightStatus: function(flight){
@@ -283,9 +365,90 @@
  
                       })
                   },
+                  createFlight: function(flight) {
+                      axios({
+                        method: 'post',
+                        url: '/apis/v1/',
+                        headers: {
+                            'X-CSRFToken': this.csrf_token
+                        },
+                      data:    { 'flightday':`${this.datetime}`,
+                                'carrierfscode':`${flight.carrierFsCode}`, 
+                                'flightnumber':`${flight.flightNumber}`, 
+                                'departureairportfscode':`${flight.departureAirportFsCode}`, 
+                                'formatteddeparture':`${flight.formattedDeparture}`, 
+                                'arrivalairportfscode':`${flight.arrivalAirportFsCode}`,
+                                'formattedarrival':`${flight.formattedArrival}`, 
+                                'edit': false,
+                                'flightequipmentiatacode':`${flight.flightEquipmentIataCode}`
+                      }              
+                    }).then(response => {
+                        console.log(response.data)
+                  
+                      }).catch(error=>console.log(error.response.data))
+                  },
+                  loadFlights: function() {
+                      axios({
+                          method: 'get',
+                          url: '/apis/v1/' ,
+                          headers: {
+                              'X-CSRFToken': this.csrf_token
+                          },
+                      }).then(response => {
+                          this.scheduledFlights = response.data
+                          .map(flight=>{
+                          flight.flightdate = moment(flight.flightday).format("MM/DD/YYYY")
+                          flight.year = moment(flight.flightday).format("YYYY")
+                          flight.month = moment(flight.flightday).format("MM")
+                          flight.day = moment(flight.flightday).format("DD")
+                          flight.displayInfo = false
 
-        }
+                          return flight
+                      })
+                          this.myFlights.forEach(flight=>{
+                             edit = true
+                          })
+                          this.showSavedFlights = true
+                          console.log(response.data)
+                          
+                          // this.students.forEach(student=>{   ///this is import this is a for loop this is how you fill the obeject editStudent with data that you can then manipulate
+                          //     if(student.edit===true){
+                          //         this.editStudent= student
+                          //     }
+                          // })
+                          // console.log(this.editStudent, 'editStudentinfo')
+                          
+                      })
+                  },
+                  deleteFlight: function(id) {
+                      console.log(id)
+                      axios({
+                          method: 'delete',
+                          url: `/apis/v1/${id}`,
+                          headers: {
+                              'X-CSRFToken': this.csrf_token
+                          },
+                          data: {
+                            
+                          },
+                      }).then(response => {
+                          this.loadFlights()
+                          // this.students = response.data
+                          
+                      })
+            
+
+            },
+          },
+              mounted: function() {
+                  this.csrf_token = document.querySelector('input[name="csrfmiddlewaretoken"]').value
+              },
          
     });
 </script>
+{% else %}
+<p>You are not logged in</p>
+<a href="{% url 'login' %}">Log In</a> |
+<a href="{% url 'signup' %}">Sign Up</a>
+{% endif %}
 {% endblock %}
