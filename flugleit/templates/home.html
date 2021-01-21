@@ -27,45 +27,46 @@
       </header>
       <div id="flight_search">
         <div id="dep_lookup">
-        <h3 id="intro">Find your flight home:</h3>
+        <h3 id="intro">Find your flight home :</h3>
         <label for="dep_airport">Departure Airport:</label>
             <input @input="getDepAirport" type="text" class="search_input" id="dep_airport" v-model="departureEntry" placeholder="enter city or airport code">
               <div v-if="departureAirport">
-              <div v-for="item in departureAirport.slice(0, 10)" :key="item.id" id="dep_airport_entry":value = "item.codeIataAirport">[[item.nameAirport]] [[item.codeIataAirport]] <button @click="setDep(item.codeIataAirport, item.nameAirport)"> ✔</button></div>
+              <div v-for="item in departureAirport.slice(0, 10)" :key="item.id" id="dep_airport_entry":value = "item.codeIataAirport">[[item.nameAirport]] [[item.codeIataAirport]] <button @click="setDep(item.codeIataAirport, item.nameAirport)" class="check_button"> ✔</button></div>
               </div>
         </div>
         <div id="arr_lookup">
           <label for="arr_airport">Arrival Airport:</label>
               <input @input="getArrAirport" type="text" class="search_input" id="arr_airport" v-model="arrEntry" placeholder="enter city or airport code">
                 <div v-if="arrAiport">
-                <div v-for="item in arrAiport.slice(0, 10)" :key="item.id" id="arr_airport_entry":value = "item.codeIataAirport">[[item.nameAirport]] [[item.codeIataAirport]] <button @click="setArr(item.codeIataAirport, item.nameAirport)"> ✔</button></div>
+                <div v-for="item in arrAiport.slice(0, 10)" :key="item.id" id="arr_airport_entry":value = "item.codeIataAirport">[[item.nameAirport]] [[item.codeIataAirport]] <button @click="setArr(item.codeIataAirport, item.nameAirport)" class="check_button"> ✔</button></div>
                 </div>
         </div>
         <div id="date_search">
           <label for="dep_date">Enter Dep Date:</label>
           <input type="date" id="start" name="dep_date" class="search_input"
            value="2021-01-01" v-model="datetime"
-           min="2021-01-01" max="2031-12-31">
-          <div id="buttons"><br><br><button @click="formatDate" class="button">Find Flights</button> <button @click="loadFlights" class="button">My Saved Flights</button> <button @click="clearForm" class="button">clear</button></div>
-        </div>
+           min="2021-01-01" max="2031-12-31"><br>
+          </div>
+          <div id="buttons"><br><br><button @click="formatDate" class="buttonInput">Find Flights</button> <button @click="loadFlights" class="buttonInput">My Saved Flights</button> <button @click="clearForm" class="buttonInput">Clear</button></div>
+        
         </div>
           <div v-if ="showSavedFlights" id="display_saved_flights">
             <ul v-for="flight in scheduledFlights" id="savedflightlist" :key="flight.id">
-              <li>Date: [[flight.flightdate]] Dep: [[flight.departureairportfscode]] [[flight.formatteddeparture]] Arr: [[flight.arrivalairportfscode]] [[flight.formattedarrival]] [[flight.carrierfscode]] [[flight.flightnumber]] Aircraft Type: [[flight.flightequipmentiatacode]]<br><button v-if ="flight.displayInfo === true"  @click="collapseFlight">collapse</button> 
-                <button @click="deleteFlight(flight.id)">delete flight</button>
-                <button v-if ="flight.displayInfo === false" @click="getSavedFlightStatus(flight)">Check Flight Status</button>
-                  <div class= "flight_info" v-if ="flight.displayInfo === true"> 
+              <li>Date: [[flight.flightdate]] Dep: [[flight.departureairportfscode]] [[flight.formatteddeparture]] Arr: [[flight.arrivalairportfscode]] [[flight.formattedarrival]] [[flight.carrierfscode]] [[flight.flightnumber]] Aircraft Type: [[flight.flightequipmentiatacode]]<br><button v-if ="flight.displayInfo === true"  @click="collapseFlight" class="collapse_button">collapse</button> 
+                <button @click="deleteFlight(flight.id)"class="delete_button">delete flight</button>
+                <button v-if ="flight.displayInfo === false" @click="getSavedFlightStatus(flight)"class="status_button">Check Flight Status</button>
+                  <div class= "flight_info_saved" v-if ="flight.displayInfo === true"> 
                     <!-- <div>[[today]]</div> -->
                     <div class= "flight_info" v-if = "flightStatus[0].airportResources.departureGate" id="Departure_Gate">Departure Gate: [[flightStatus[0].airportResources.departureGate]]</div>
                       <div class = "flight_info_none" v-else>No Departure Gate Information</div>
                     <div class= "flight_info" v-if = "flightStatus[0].airportResources.arrivalGate" id="Arrival_Gate">Arrival Gate: [[flightStatus[0].airportResources.arrivalGate]]</div>
                       <div class = "flight_info_none" v-else>No Arrival Gate Information</div>
-                    <div class= "flight_info" v-if = "flightStatus[0].airportResources.baggage" id="Baggage_Claim">Baggage Claim: [[flightStatus[0].airportResources.baggage]]</div>
-                      <div class = "flight_info_none" v-else>No Baggage Information</div>
                     <div class= "flight_info" v-if="flightStatus[0].formatEstimatedDeparture"id="delays">Scheduled Dep: [[flightStatus[0].formatScheduledDeparture]] Estimated Dep:[[flightStatus[0].formatEstimatedDeparture]]</div>
                       <div class = "flight_info_none" v-else>No Departure Delay Information</div>
-                    <div class= "flight_info" v-if="flightStatus[0].formatEstimatedArrival" id="delays">Scheduled Arr: [[flightStatus[0].formatScheduledArrival]] Estimated Arr:[[flightStatus[0].formatEstimatedArrival]]</div>
+                    <div class= "flight_info" v-if="flightStatus[0].formatEstimatedArrival" id="arr_delays">Scheduled Arr: [[flightStatus[0].formatScheduledArrival]] Estimated Arr:[[flightStatus[0].formatEstimatedArrival]]</div>
                       <div class = "flight_info_none" v-else>No Arrival Delay Information</div>
+                    <div class= "flight_info" v-if = "flightStatus[0].airportResources.baggage" id="Baggage_Claim">Baggage Claim: [[flightStatus[0].airportResources.baggage]]</div>
+                      <div class = "flight_info_none" v-else>No Baggage Information</div>
                   </div>
               </li>
             </ul>
@@ -73,24 +74,24 @@
           </div>
             
           <div v-if="scheduledFlights && showSavedFlights===false" id="display_flights">
-          <h3 v-if="depAirportInfo" id="date">Current Time [[departureAirportCode]]: [[depAirportInfo[0].formattedAirportLocal]]</h3>
           <h4 id="flight_date"> Flight Date: [[datetimedisplay]]</h4>
+          <h3 v-if="depAirportInfo" id="date">Current Time [[departureAirportCode]]: [[depAirportInfo[0].formattedAirportLocal]]</h3>
      
           <ul v-for="flight in scheduledFlights" id="flightlist" :key="flight.flightNumber">
-              <li> Dep: [[flight.departureAirportFsCode]] [[flight.formattedDeparture]] Arr: [[flight.arrivalAirportFsCode]] [[flight.formattedArrival]] [[flight.carrierFsCode]] [[flight.flightNumber]] Aircraft Type: [[flight.flightEquipmentIataCode]] <button @click = "createFlight(flight)">Save</button><button v-if ="flight.displayInfo === true"  @click="collapseFlight">collapse</button> 
-                  <button v-if ="flight.displayInfo === false" @click="getFlightStatus(flight)">Check Flight Status</button>
-                  <div class= "flight_info" v-if ="flight.displayInfo"> 
+              <li> Dep: [[flight.departureAirportFsCode]] [[flight.formattedDeparture]] Arr: [[flight.arrivalAirportFsCode]] [[flight.formattedArrival]] [[flight.carrierFsCode]] [[flight.flightNumber]] Aircraft Type: [[flight.flightEquipmentIataCode]] <button @click = "createFlight(flight)"class="save_button">Save</button> <button v-if ="flight.displayInfo === true"  @click="collapseFlight" class="collapse_button">collapse</button> 
+                  <button v-if ="flight.displayInfo === false" @click="getFlightStatus(flight)"class="status_button">Check Flight Status</button>
+                  <div class= "flight_info_whole" v-if ="flight.displayInfo"> 
                     <!-- <div>[[today]]</div> -->
                     <div class= "flight_info" v-if = "flightStatus[0].airportResources.departureGate" id="Departure_Gate">Departure Gate: [[flightStatus[0].airportResources.departureGate]]</div>
                       <div class = "flight_info_none" v-else>No Departure Gate Information</div>
                     <div class= "flight_info" v-if = "flightStatus[0].airportResources.arrivalGate" id="Arrival_Gate">Arrival Gate: [[flightStatus[0].airportResources.arrivalGate]]</div>
                       <div class = "flight_info_none" v-else>No Arrival Gate Information</div>
-                    <div class= "flight_info" v-if = "flightStatus[0].airportResources.baggage" id="Baggage_Claim">Baggage Claim: [[flightStatus[0].airportResources.baggage]]</div>
-                      <div class = "flight_info_none" v-else>No Baggage Information</div>
                     <div class= "flight_info" v-if="flightStatus[0].formatEstimatedDeparture"id="delays">Scheduled Dep: [[flightStatus[0].formatScheduledDeparture]] Estimated Dep:[[flightStatus[0].formatEstimatedDeparture]]</div>
                       <div class = "flight_info_none" v-else>No Departure Delay Information</div>
-                    <div class= "flight_info" v-if="flightStatus[0].formatEstimatedArrival" id="delays">Scheduled Arr: [[flightStatus[0].formatScheduledArrival]] Estimated Arr:[[flightStatus[0].formatEstimatedArrival]]</div>
+                    <div class= "flight_info" v-if="flightStatus[0].formatEstimatedArrival" id="arr_delays">Scheduled Arr: [[flightStatus[0].formatScheduledArrival]] Estimated Arr:[[flightStatus[0].formatEstimatedArrival]]</div>
                       <div class = "flight_info_none" v-else>No Arrival Delay Information</div>
+                    <div class= "flight_info" v-if = "flightStatus[0].airportResources.baggage" id="Baggage_Claim">Baggage Claim: [[flightStatus[0].airportResources.baggage]]</div>
+                      <div class = "flight_info_none" v-else>No Baggage Information</div>
                   </div>
               </li>
           </ul>
