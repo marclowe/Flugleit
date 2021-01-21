@@ -4,13 +4,16 @@
 {% block title %}Log In{% endblock %}
 
 {% block content %}
-
-<h2>Let's Getchu Home<h2>
-<h2>Log In</h2>
+<div id="login_screen">
+<header id="login_header">
+<h2 id="getchu">Let's Getchu Home<h2>
+{% comment %} <h2 id="login">Log In</h2> {% endcomment %}
+</header>
 <form method="post">
   {% csrf_token %}
   {{ form.as_p }}
-  <button type="submit">Log In</button>
+  <button type="submit"id="login_button">Log In</button>
 </form>
+</div>
 
 {% endblock %}

@@ -47,7 +47,7 @@
            value="2021-01-01" v-model="datetime"
            min="2021-01-01" max="2031-12-31"><br>
           </div>
-          <div id="buttons"><br><br><button @click="formatDate" class="buttonInput">Find Flights</button> <button @click="loadFlights" class="buttonInput">My Saved Flights</button> <button @click="clearForm" class="buttonInput">Clear</button></div>
+          <div id="buttons"><button @click="formatDate" class="buttonInput">Find Flights</button> <button @click="loadFlights" class="buttonInput">My Saved Flights</button> <button @click="clearForm" class="buttonInput">Clear</button></div>
         
         </div>
           <div v-if ="showSavedFlights" id="display_saved_flights">
